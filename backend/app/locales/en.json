@@ -1,0 +1,46 @@
+{
+  "bot": {
+    "start": "<b>Welcome.</b> I help curators with checklists, reminders, and templates for cats in care.\n\nOpen the Mini App to add cats and start scenarios:\n{miniapp_url}",
+    "help": "Use /start to open the menu button <b>Open app</b>. All scenarios and reminders are tied to a specific cat."
+  },
+  "reminders": {
+    "adopted_home": {
+      "day_1": "<b>{cat_name}</b> — Day 1 at home: food, fresh water, litter box placement. Keep it quiet; limit visitors.",
+      "day_2": "<b>{cat_name}</b> — Day 2: how was the night? Any vomiting, diarrhea, or hiding without eating for 24h? If worried, message your coordinator.",
+      "day_3": "<b>{cat_name}</b> — Day 3: appetite and litter use should be stabilizing. Note anything unusual for the adoption update.",
+      "day_4": "<b>{cat_name}</b> — Day 4: routine check — play, rest zones, scratching options.",
+      "day_5": "<b>{cat_name}</b> — Day 5: confirm microchip/adoption paperwork tasks if applicable.",
+      "day_6": "<b>{cat_name}</b> — Day 6: short welfare check — eyes, ears, coat, paws.",
+      "day_7": "<b>{cat_name}</b> — Week 1 milestone: send a brief update to the team if required.",
+      "day_8": "<b>{cat_name}</b> — Day 8: behavior note — hiding vs exploring, vocalization.",
+      "day_9": "<b>{cat_name}</b> — Day 9: litter routine fine-tuning (location, cleanliness).",
+      "day_10": "<b>{cat_name}</b> — Day 10: enrichment — toys, vertical space.",
+      "day_11": "<b>{cat_name}</b> — Day 11: diet steady? Any treats that upset stomach?",
+      "day_12": "<b>{cat_name}</b> — Day 12: plan the two-week summary for the adopter check-in.",
+      "day_13": "<b>{cat_name}</b> — Day 13: confirm vet follow-ups if promised to adopter.",
+      "day_14": "<b>{cat_name}</b> — Day 14: end of trial period checklist — confirm adoption finalization steps with your coordinator."
+    },
+    "new_capture": {
+      "intro": "<b>{cat_name}</b> — New intake: secure carrier, quiet room, fresh water. Avoid forced handling.",
+      "day_1": "<b>{cat_name}</b> — Day 1: observe breathing, wounds, parasites. Photo for records if safe.",
+      "day_3": "<b>{cat_name}</b> — Day 3: quarantine basics — separate airflow/gear from other animals where possible.",
+      "day_7": "<b>{cat_name}</b> — Week 1: reassess vet visit timing, deworming/FIV-FeLV planning per local protocol."
+    },
+    "post_prep": {
+      "reminder": "<b>{cat_name}</b> — Time to prepare an adoption post: photos, key traits, and contact rules."
+    },
+    "sterilization": {
+      "remove_food": "<b>{cat_name}</b> — Sterilization prep: remove food about <b>12 hours</b> before anesthesia (per clinic rules). Op time: {op_at}",
+      "remove_water": "<b>{cat_name}</b> — Remove water about <b>8 hours</b> before surgery unless clinic says otherwise. Op time: {op_at}",
+      "operation": "<b>{cat_name}</b> — Surgery window: {op_at}. Arrive on time with carrier, warm blanket, and emergency contact."
+    },
+    "potential_adopter": {
+      "nudge": "<b>{cat_name}</b> — Follow up with the potential adopter: use the question template in the Mini App."
+    }
+  },
+  "templates": {
+    "sterilization_clinic": "Hello! I foster with [organization]. Please book sterilization for [cat name], approx [weight] kg. Preferred dates: [dates]. Any pre-op instructions?",
+    "potential_adopter_questions": "1) Housing type and windows/screens?\n2) Other pets?\n3) Experience with cats?\n4) Vet plans and emergency budget?\n5) Return policy understanding?\n6) Who will care daily?",
+    "post_structure": "Title + 2–3 traits + age/sex (if known) + health status + location + how to apply + disclaimer that screening applies."
+  }
+}

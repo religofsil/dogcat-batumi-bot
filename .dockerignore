@@ -1,0 +1,7 @@
+.git
+.venv
+**/__pycache__
+**/node_modules
+**/.pytest_cache
+miniapp/dist
+backend/app/static/miniapp
