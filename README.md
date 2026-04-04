@@ -84,7 +84,8 @@ Run `docker compose` (or the stack you prefer) on the host and let Caddy obtain 
 
 ## CI/CD
 
-- `.github/workflows/ci.yml` — Ruff, pytest, `docker build` on every push/PR.
+- `.github/workflows/ci.yml` — Ruff, pytest, and `docker build` on **every push** (any branch) and on **every pull request**. Manual runs: **Actions** → **CI** → **Run workflow**.
+- If the **Actions** tab shows no runs, open **Settings → Actions → General** and allow GitHub Actions for this repository (and for forks, the policy you need).
 - `.github/workflows/deploy.yml` — manual **Run workflow**; requires secrets `VPS_HOST`, `VPS_USER`, `VPS_SSH_KEY`, `VPS_DEPLOY_PATH` (absolute path to this repo on the server with your `.env` and `docker-compose.yml`).
 
 ## Notes
