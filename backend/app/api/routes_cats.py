@@ -8,13 +8,11 @@ from app.api.deps import CurrentUser
 from app.database import get_db
 from app.models import Cat
 from app.schemas.cats import CatCreate, CatOut, CatUpdate
-from app.services.cat_uploads import delete_cat_upload_dir, save_cat_photo
+from app.services.cat_uploads import CONTENT_EXT, delete_cat_upload_dir, save_cat_photo
 
 router = APIRouter(prefix="/api/cats", tags=["cats"])
 
-_ALLOWED_CT = frozenset(
-    {"image/jpeg", "image/jpg", "image/png", "image/webp"},
-)
+_ALLOWED_CT = frozenset(CONTENT_EXT)
 
 
 @router.get("", response_model=list[CatOut])

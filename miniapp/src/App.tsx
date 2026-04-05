@@ -137,21 +137,29 @@ export default function App() {
 
   async function onAddCat() {
     if (!newName.trim()) return;
-    const cat = await createCat({
-      name: newName.trim(),
-      weight_kg: newWeight ? newWeight : null,
-      notes: newNotes || null,
-      organization: newOrg,
-    });
-    if (newPhotoFile) {
-      await uploadCatPhoto(cat.id, newPhotoFile);
+    try {
+      const cat = await createCat({
+        name: newName.trim(),
+        weight_kg: newWeight ? newWeight : null,
+        notes: newNotes || null,
+        organization: newOrg,
+      });
+      if (newPhotoFile) {
+        try {
+          await uploadCatPhoto(cat.id, newPhotoFile);
+        } catch (err) {
+          window.Telegram?.WebApp?.showAlert(err instanceof Error ? err.message : String(err));
+        }
+      }
+      setNewName("");
+      setNewWeight("");
+      setNewNotes("");
+      setNewOrg("none");
+      setNewPhotoFile(null);
+      await refreshCats();
+    } catch (err) {
+      window.Telegram?.WebApp?.showAlert(err instanceof Error ? err.message : String(err));
     }
-    setNewName("");
-    setNewWeight("");
-    setNewNotes("");
-    setNewOrg("none");
-    setNewPhotoFile(null);
-    await refreshCats();
   }
 
   async function onSaveCat(cat: Cat) {
