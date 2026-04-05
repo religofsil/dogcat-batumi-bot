@@ -34,12 +34,16 @@ export type User = {
   created_at: string;
 };
 
+export type CatOrganization = "catebi" | "dogcat_batumi" | "dogcat_tbilisi" | "none";
+
 export type Cat = {
   id: number;
   user_id: number;
   name: string;
   weight_kg: string | null;
   notes: string | null;
+  photo_url: string | null;
+  organization: CatOrganization;
   created_at: string;
 };
 
@@ -90,18 +94,42 @@ export async function createCat(body: {
   name: string;
   weight_kg?: string | null;
   notes?: string | null;
+  organization?: CatOrganization;
 }): Promise<Cat> {
   return apiFetch<Cat>("/api/cats", { method: "POST", body: JSON.stringify(body) });
 }
 
 export async function updateCat(
   id: number,
-  body: { name?: string; weight_kg?: string | null; notes?: string | null },
+  body: {
+    name?: string;
+    weight_kg?: string | null;
+    notes?: string | null;
+    organization?: CatOrganization;
+  },
 ): Promise<Cat> {
   return apiFetch<Cat>(`/api/cats/${id}`, {
     method: "PATCH",
     body: JSON.stringify(body),
   });
+}
+
+export async function uploadCatPhoto(catId: number, file: File): Promise<Cat> {
+  const fd = new FormData();
+  fd.append("file", file);
+  const res = await fetch(`${apiBase}/api/cats/${catId}/photo`, {
+    method: "POST",
+    credentials: "include",
+    body: fd,
+  });
+  if (!res.ok) {
+    throw new Error(await res.text());
+  }
+  return parseJson<Cat>(res);
+}
+
+export async function deleteCatPhoto(catId: number): Promise<Cat> {
+  return apiFetch<Cat>(`/api/cats/${catId}/photo`, { method: "DELETE" });
 }
 
 export async function deleteCat(id: number): Promise<void> {

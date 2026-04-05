@@ -21,9 +21,12 @@ services:
       - .env
     environment:
       DATABASE_URL: postgresql+asyncpg://curator:curator@postgres:5432/curator
+    volumes:
+      - cat_uploads:/app/data/uploads
     depends_on:
       postgres:
         condition: service_healthy
 
 volumes:
   pgdata:
+  cat_uploads:

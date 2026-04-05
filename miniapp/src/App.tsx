@@ -6,6 +6,7 @@ import {
   cancelScenario,
   createCat,
   deleteCat,
+  deleteCatPhoto,
   listCats,
   listDrugs,
   listReminders,
@@ -18,12 +19,21 @@ import {
   templatePost,
   templateSterilization,
   updateCat,
+  uploadCatPhoto,
   type Cat,
+  type CatOrganization,
   type Reminder,
   type ScenarioRun,
   type User,
 } from "./api";
 import i18n from "./i18n";
+
+const CAT_ORGANIZATIONS: CatOrganization[] = [
+  "catebi",
+  "dogcat_batumi",
+  "dogcat_tbilisi",
+  "none",
+];
 
 type ScenarioChoice =
   | "new_capture"
@@ -48,6 +58,8 @@ export default function App() {
   const [newName, setNewName] = useState("");
   const [newWeight, setNewWeight] = useState("");
   const [newNotes, setNewNotes] = useState("");
+  const [newOrg, setNewOrg] = useState<CatOrganization>("none");
+  const [newPhotoFile, setNewPhotoFile] = useState<File | null>(null);
   const [scenarioPick, setScenarioPick] = useState<ScenarioChoice | "">("");
   const [opLocal, setOpLocal] = useState("");
   const [delayDays, setDelayDays] = useState("2");
@@ -57,6 +69,17 @@ export default function App() {
     () => cats.find((c) => c.id === selectedId) || null,
     [cats, selectedId],
   );
+
+  const newPhotoPreview = useMemo(
+    () => (newPhotoFile ? URL.createObjectURL(newPhotoFile) : null),
+    [newPhotoFile],
+  );
+
+  useEffect(() => {
+    return () => {
+      if (newPhotoPreview) URL.revokeObjectURL(newPhotoPreview);
+    };
+  }, [newPhotoPreview]);
 
   async function refreshCats() {
     setCats(await listCats());
@@ -114,15 +137,29 @@ export default function App() {
 
   async function onAddCat() {
     if (!newName.trim()) return;
-    await createCat({
-      name: newName.trim(),
-      weight_kg: newWeight ? newWeight : null,
-      notes: newNotes || null,
-    });
-    setNewName("");
-    setNewWeight("");
-    setNewNotes("");
-    await refreshCats();
+    try {
+      const cat = await createCat({
+        name: newName.trim(),
+        weight_kg: newWeight ? newWeight : null,
+        notes: newNotes || null,
+        organization: newOrg,
+      });
+      if (newPhotoFile) {
+        try {
+          await uploadCatPhoto(cat.id, newPhotoFile);
+        } catch (err) {
+          window.Telegram?.WebApp?.showAlert(err instanceof Error ? err.message : String(err));
+        }
+      }
+      setNewName("");
+      setNewWeight("");
+      setNewNotes("");
+      setNewOrg("none");
+      setNewPhotoFile(null);
+      await refreshCats();
+    } catch (err) {
+      window.Telegram?.WebApp?.showAlert(err instanceof Error ? err.message : String(err));
+    }
   }
 
   async function onSaveCat(cat: Cat) {
@@ -130,8 +167,36 @@ export default function App() {
       name: cat.name,
       weight_kg: cat.weight_kg,
       notes: cat.notes,
+      organization: cat.organization,
     });
     await refreshCats();
+  }
+
+  async function onOrgChange(catId: number, organization: CatOrganization) {
+    await updateCat(catId, { organization });
+    await refreshCats();
+  }
+
+  async function onSelectedPhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const f = e.target.files?.[0];
+    e.target.value = "";
+    if (!f || !selected) return;
+    try {
+      await uploadCatPhoto(selected.id, f);
+      await refreshCats();
+    } catch (err) {
+      window.Telegram?.WebApp?.showAlert(err instanceof Error ? err.message : String(err));
+    }
+  }
+
+  async function onRemoveSelectedPhoto() {
+    if (!selected) return;
+    try {
+      await deleteCatPhoto(selected.id);
+      await refreshCats();
+    } catch (err) {
+      window.Telegram?.WebApp?.showAlert(err instanceof Error ? err.message : String(err));
+    }
   }
 
   async function onDeleteCat(id: number) {
@@ -281,6 +346,43 @@ export default function App() {
                   placeholder={t("notes")}
                 />
               </div>
+              <div>
+                <label className="field__label" htmlFor="new-cat-org">
+                  {t("organization")}
+                </label>
+                <select
+                  id="new-cat-org"
+                  className="select"
+                  value={newOrg}
+                  onChange={(e) => setNewOrg(e.target.value as CatOrganization)}
+                >
+                  {CAT_ORGANIZATIONS.map((o) => (
+                    <option key={o} value={o}>
+                      {t(`org_${o}` as never)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="field__label" htmlFor="new-cat-photo">
+                  {t("photo")}
+                </label>
+                <input
+                  id="new-cat-photo"
+                  className="input"
+                  type="file"
+                  accept="image/jpeg,image/jpg,image/png,image/webp"
+                  capture="environment"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0] ?? null;
+                    setNewPhotoFile(f);
+                  }}
+                />
+                <p className="text-small text-muted">{t("photoHint")}</p>
+                {newPhotoPreview ? (
+                  <img className="cat-photo-preview" src={newPhotoPreview} alt="" />
+                ) : null}
+              </div>
               <button type="button" className="btn btn--primary btn--block" onClick={() => void onAddCat()}>
                 {t("addCat")}
               </button>
@@ -289,10 +391,20 @@ export default function App() {
                   <div key={c.id} className="cat-row">
                     <button
                       type="button"
-                      className="btn btn--ghost btn--block"
+                      className="btn btn--ghost cat-row__main"
                       onClick={() => setSelectedId(c.id)}
                     >
-                      {c.name}
+                      {c.photo_url ? (
+                        <img className="cat-row__thumb" src={c.photo_url} alt="" />
+                      ) : (
+                        <div className="cat-row__thumb cat-row__thumb--empty" aria-hidden />
+                      )}
+                      <span className="cat-row__text">
+                        <span className="cat-row__name">{c.name}</span>
+                        <span className="cat-row__org text-small text-muted">
+                          {t(`org_${c.organization}` as never)}
+                        </span>
+                      </span>
                     </button>
                     <button
                       type="button"
@@ -309,6 +421,52 @@ export default function App() {
             {selected ? (
               <section className="card stack">
                 <span className="card__title">{selected.name}</span>
+                <div className="cat-detail-photo">
+                  {selected.photo_url ? (
+                    <img className="cat-photo-preview" src={selected.photo_url} alt="" />
+                  ) : (
+                    <div className="cat-photo-placeholder text-muted text-small">{t("photo")}</div>
+                  )}
+                  <div className="row row--photo-actions">
+                    <label className="btn btn--secondary btn--block">
+                      {t("choosePhoto")}
+                      <input
+                        type="file"
+                        className="visually-hidden"
+                        accept="image/jpeg,image/jpg,image/png,image/webp"
+                        capture="environment"
+                        onChange={(e) => void onSelectedPhotoChange(e)}
+                      />
+                    </label>
+                    {selected.photo_url ? (
+                      <button
+                        type="button"
+                        className="btn btn--secondary btn--block"
+                        onClick={() => void onRemoveSelectedPhoto()}
+                      >
+                        {t("removePhoto")}
+                      </button>
+                    ) : null}
+                  </div>
+                  <p className="text-small text-muted">{t("photoHint")}</p>
+                </div>
+                <div>
+                  <label className="field__label" htmlFor="cat-org">
+                    {t("organization")}
+                  </label>
+                  <select
+                    id="cat-org"
+                    className="select"
+                    value={selected.organization}
+                    onChange={(e) => void onOrgChange(selected.id, e.target.value as CatOrganization)}
+                  >
+                    {CAT_ORGANIZATIONS.map((o) => (
+                      <option key={o} value={o}>
+                        {t(`org_${o}` as never)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
                 <div>
                   <label className="field__label" htmlFor="cat-weight">
                     {t("weight")}
