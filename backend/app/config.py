@@ -28,7 +28,7 @@ class Settings(BaseSettings):
     secure_cookies: bool = True
 
     upload_root: Path = Path("/app/data/uploads")
-    max_upload_bytes: int = 5_000_000
+    max_upload_bytes: int = 10_485_760  # 10 MiB
 
     @property
     def miniapp_url(self) -> str:
