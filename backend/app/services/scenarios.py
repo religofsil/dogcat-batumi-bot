@@ -68,6 +68,8 @@ async def schedule_reminders_for_run(
     run: ScenarioRun,
     *,
     default_tz: str,
+    daily_hour: int,
+    daily_minute: int,
     anchor: datetime | None = None,
 ) -> list[Reminder]:
     cat_res = await db.execute(select(Cat).where(Cat.id == run.cat_id))
@@ -91,31 +93,31 @@ async def schedule_reminders_for_run(
 
     st = run.scenario_type
     if st == ScenarioType.adopted_home:
-        # Day 1..14 local mornings
+        # Day 1..14 at user's preferred local time
         for day in range(1, 15):
             key = f"reminders.adopted_home.day_{day}"
-            rt = _at_local_day_start(anchor_local, day, 9, 0)
+            rt = _at_local_day_start(anchor_local, day, daily_hour, daily_minute)
             add(f"adopted_day_{day}", key, rt, {"day": day})
     elif st == ScenarioType.new_capture:
         add("capture_intro", "reminders.new_capture.intro", anchor_local.astimezone(UTC))
         add(
             "capture_day1",
             "reminders.new_capture.day_1",
-            _at_local_day_start(anchor_local, 1, 10, 0),
+            _at_local_day_start(anchor_local, 1, daily_hour, daily_minute),
         )
         add(
             "capture_day3",
             "reminders.new_capture.day_3",
-            _at_local_day_start(anchor_local, 3, 10, 0),
+            _at_local_day_start(anchor_local, 3, daily_hour, daily_minute),
         )
         add(
             "capture_day7",
             "reminders.new_capture.day_7",
-            _at_local_day_start(anchor_local, 7, 10, 0),
+            _at_local_day_start(anchor_local, 7, daily_hour, daily_minute),
         )
     elif st == ScenarioType.post_prep:
         days = int((run.context or {}).get("post_delay_days", 2))
-        rt = _at_local_day_start(anchor_local, days, 11, 0)
+        rt = _at_local_day_start(anchor_local, days, daily_hour, daily_minute)
         add("post_prep", "reminders.post_prep.reminder", rt)
     elif st == ScenarioType.sterilization:
         op_raw = (run.context or {}).get("operation_at")
@@ -145,7 +147,7 @@ async def schedule_reminders_for_run(
         )
     elif st == ScenarioType.potential_adopter:
         # Templates-only scenario: optional nudge after 3 days
-        rt = _at_local_day_start(anchor_local, 3, 12, 0)
+        rt = _at_local_day_start(anchor_local, 3, daily_hour, daily_minute)
         add("adopter_nudge", "reminders.potential_adopter.nudge", rt)
 
     for r in reminders:
@@ -174,7 +176,16 @@ async def start_scenario(
     )
     db.add(run)
     await db.flush()
-    await schedule_reminders_for_run(db, run, default_tz=default_tz, anchor=anchor)
+    user_res = await db.execute(select(User).where(User.id == user_id))
+    u = user_res.scalar_one()
+    await schedule_reminders_for_run(
+        db,
+        run,
+        default_tz=default_tz,
+        daily_hour=u.daily_reminder_time.hour,
+        daily_minute=u.daily_reminder_time.minute,
+        anchor=anchor,
+    )
     await db.refresh(run)
     return run
 

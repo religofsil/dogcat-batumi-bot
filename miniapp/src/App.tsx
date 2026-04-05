@@ -13,6 +13,7 @@ import {
   listScenarios,
   listUpcomingReminders,
   loadMe,
+  patchDailyReminderTime,
   patchLocale,
   startScenario,
   templateAdopter,
@@ -132,6 +133,17 @@ export default function App() {
     if (user) {
       const u = await patchLocale(code);
       setUser(u);
+    }
+  }
+
+  async function onDailyReminderTimeChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const v = e.target.value;
+    if (!v || !user) return;
+    try {
+      const u = await patchDailyReminderTime(v);
+      setUser(u);
+    } catch (err) {
+      window.Telegram?.WebApp?.showAlert(err instanceof Error ? err.message : String(err));
     }
   }
 
@@ -294,16 +306,35 @@ export default function App() {
         {boot === "ready" ? (
           <>
             <section className="card stack">
-              <span className="card__title">{t("locale")}</span>
-              <select
-                className="select"
-                value={user?.locale || "en"}
-                onChange={(e) => void onLocaleChange(e.target.value)}
-              >
-                <option value="en">English</option>
-                <option value="ru">Русский</option>
-                <option value="ka">ქართული</option>
-              </select>
+              <span className="card__title">{t("settings")}</span>
+              <div>
+                <label className="field__label" htmlFor="locale-select">
+                  {t("locale")}
+                </label>
+                <select
+                  id="locale-select"
+                  className="select"
+                  value={user?.locale || "en"}
+                  onChange={(e) => void onLocaleChange(e.target.value)}
+                >
+                  <option value="en">English</option>
+                  <option value="ru">Русский</option>
+                  <option value="ka">ქართული</option>
+                </select>
+              </div>
+              <div>
+                <label className="field__label" htmlFor="daily-reminder-time">
+                  {t("dailyReminderTime")}
+                </label>
+                <input
+                  id="daily-reminder-time"
+                  className="input"
+                  type="time"
+                  value={(user?.daily_reminder_time ?? "09:00:00").slice(0, 5)}
+                  onChange={(e) => void onDailyReminderTimeChange(e)}
+                />
+                <p className="text-small text-muted">{t("dailyReminderTimeHint")}</p>
+              </div>
             </section>
 
             <section className="card stack">
