@@ -1,4 +1,5 @@
 from functools import lru_cache
+from pathlib import Path
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -25,6 +26,9 @@ class Settings(BaseSettings):
     reminder_poll_seconds: int = 45
     set_webhook_on_startup: bool = False
     secure_cookies: bool = True
+
+    upload_root: Path = Path("/app/data/uploads")
+    max_upload_bytes: int = 5_000_000
 
     @property
     def miniapp_url(self) -> str:

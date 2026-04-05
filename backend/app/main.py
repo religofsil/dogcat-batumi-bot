@@ -57,6 +57,7 @@ async def lifespan(app: FastAPI):
 
 def create_app() -> FastAPI:
     settings = get_settings()
+    settings.upload_root.mkdir(parents=True, exist_ok=True)
     app = FastAPI(title="Batumi curator bot", lifespan=lifespan)
 
     origins = list({*settings.cors_origin_list, settings.public_base_url.rstrip("/")})
@@ -76,6 +77,12 @@ def create_app() -> FastAPI:
     app.include_router(reminders_upcoming_router)
     app.include_router(dosage_router)
     app.include_router(templates_router)
+
+    app.mount(
+        "/uploads",
+        StaticFiles(directory=str(settings.upload_root)),
+        name="uploads",
+    )
 
     static_dir = Path(__file__).resolve().parent / "static" / "miniapp"
     if static_dir.is_dir():
