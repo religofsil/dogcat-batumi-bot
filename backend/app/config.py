@@ -30,6 +30,9 @@ class Settings(BaseSettings):
     upload_root: Path = Path("/app/data/uploads")
     max_upload_bytes: int = 10_485_760  # 10 MiB
 
+    # Optional: absolute path on the API host for miniapp NDJSON debug logs (Cursor debug sessions).
+    client_debug_log_path: str | None = None
+
     @property
     def miniapp_url(self) -> str:
         return f"{self.public_base_url.rstrip('/')}{self.miniapp_path}"
