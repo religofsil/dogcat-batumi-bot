@@ -151,6 +151,11 @@ body {
   gap: var(--space-2);
 }
 
+/* Let full-width inputs shrink inside narrow cards (WebKit time picker has large min-content width) */
+.stack > div {
+  min-width: 0;
+}
+
 .row {
   display: flex;
   gap: var(--space-2);
@@ -176,6 +181,8 @@ body {
 .select,
 .textarea {
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
   font: inherit;
   font-size: var(--text-base);
   color: var(--color-text);
@@ -187,6 +194,11 @@ body {
   transition:
     border-color var(--duration-fast) var(--ease-out),
     box-shadow var(--duration-fast) var(--ease-out);
+}
+
+/* iOS / Telegram WebView: native time control ignores width unless min-width is capped */
+.input[type="time"] {
+  display: block;
 }
 
 .textarea {
