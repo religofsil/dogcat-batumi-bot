@@ -8,6 +8,10 @@ const resources = {
       auth: "Signing in…",
       authFail: "Could not sign in. Open this app from Telegram.",
       locale: "Language",
+      settings: "Settings",
+      dailyReminderTime: "Daily reminder time",
+      dailyReminderTimeHint:
+        "Local time for day-by-day scenario reminders. Sterilization times are unchanged. Applies to new scenarios only.",
       cats: "Cats in care",
       addCat: "Add cat",
       name: "Name",
@@ -60,6 +64,10 @@ const resources = {
       auth: "Вход…",
       authFail: "Не удалось войти. Откройте приложение из Telegram.",
       locale: "Язык",
+      settings: "Настройки",
+      dailyReminderTime: "Время ежедневных напоминаний",
+      dailyReminderTimeHint:
+        "Местное время для ежедневных напоминаний сценариев. Время операций не меняется. Только для новых сценариев.",
       cats: "Подопечные",
       addCat: "Добавить кота",
       name: "Имя",
@@ -112,6 +120,10 @@ const resources = {
       auth: "შესვლა…",
       authFail: "შესვლა ვერ მოხერხდა. გახსენით აპი Telegram-იდან.",
       locale: "ენა",
+      settings: "პარამეტრები",
+      dailyReminderTime: "დღიური შეხსენების დრო",
+      dailyReminderTimeHint:
+        "ადგილობრივი დრო დღიური სცენარის შეხსენებებისთვის. ოპერაციის დრო არ იცვლება. მხოლოდ ახალი სცენარებისთვის.",
       cats: "კატები მოვლაში",
       addCat: "კატის დამატება",
       name: "სახელი",

@@ -31,6 +31,8 @@ export type User = {
   id: number;
   telegram_id: number;
   locale: string;
+  /** ISO-like time from API, e.g. "09:00:00" */
+  daily_reminder_time: string;
   created_at: string;
 };
 
@@ -83,6 +85,15 @@ export async function patchLocale(locale: string): Promise<User> {
   return apiFetch<User>("/api/me/locale", {
     method: "PATCH",
     body: JSON.stringify({ locale }),
+  });
+}
+
+/** `hm` from `<input type="time">` is usually "HH:MM"; API accepts "HH:MM:00". */
+export async function patchDailyReminderTime(hm: string): Promise<User> {
+  const daily_reminder_time = hm.length === 5 ? `${hm}:00` : hm;
+  return apiFetch<User>("/api/me/daily-reminder-time", {
+    method: "PATCH",
+    body: JSON.stringify({ daily_reminder_time }),
   });
 }
 
