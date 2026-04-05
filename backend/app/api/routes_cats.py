@@ -74,7 +74,7 @@ async def upload_cat_photo(
     cat_id: int,
     user: CurrentUser,
     db: Annotated[AsyncSession, Depends(get_db)],
-    file: UploadFile = File(...),
+    file: Annotated[UploadFile, File()],
 ) -> CatOut:
     res = await db.execute(select(Cat).where(Cat.id == cat_id, Cat.user_id == user.id))
     cat = res.scalar_one_or_none()
