@@ -8,6 +8,7 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
+from app.api.routes_debug import router as debug_router
 from app.api.routes_auth import router as auth_router
 from app.api.routes_cats import router as cats_router
 from app.api.routes_dosage import router as dosage_router
@@ -69,6 +70,7 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
 
+    app.include_router(debug_router)
     app.include_router(auth_router)
     app.include_router(user_router)
     app.include_router(cats_router)

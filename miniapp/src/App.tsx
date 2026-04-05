@@ -26,6 +26,7 @@ import {
   type ScenarioRun,
   type User,
 } from "./api";
+import { agentDebugLog } from "./agentDebugLog";
 import i18n from "./i18n";
 import { safeAlertText, safeCatPhotoUrl } from "./safeAlertText";
 
@@ -103,17 +104,80 @@ export default function App() {
   }
 
   useEffect(() => {
-    const tw = window.Telegram?.WebApp;
-    tw?.ready();
-    tw?.expand();
-    const init = tw?.initData || "";
+    let cancelled = false;
+    // #region agent log
+    const dbg = (phase: string, extra: Record<string, unknown>) => {
+      const w = window.Telegram?.WebApp;
+      agentDebugLog({
+        location: "App.tsx:boot",
+        message: `boot ${phase}`,
+        data: {
+          phase,
+          hasWebApp: !!w,
+          initDataLength: (w?.initData || "").length,
+          platform: w?.platform ?? null,
+          version: w?.version ?? null,
+          ...extra,
+        },
+        hypothesisId: "H1-H2-H5",
+      });
+    };
+    // #endregion
+
+    function waitForTelegramInitData(maxMs: number): Promise<string> {
+      const t0 = performance.now();
+      return new Promise((resolve) => {
+        const step = () => {
+          if (cancelled) {
+            resolve("");
+            return;
+          }
+          const raw = window.Telegram?.WebApp?.initData || "";
+          if (raw) {
+            resolve(raw);
+            return;
+          }
+          if (performance.now() - t0 >= maxMs) {
+            resolve("");
+            return;
+          }
+          requestAnimationFrame(step);
+        };
+        requestAnimationFrame(step);
+      });
+    }
+
     (async () => {
+      // #region agent log
+      dbg("sync", {});
+      queueMicrotask(() => {
+        if (!cancelled) dbg("microtask", {});
+      });
+      requestAnimationFrame(() => {
+        if (!cancelled) dbg("rAF", {});
+      });
+      // #endregion
       try {
+        const init = await waitForTelegramInitData(4000);
+        if (cancelled) return;
+        // #region agent log
+        dbg("after-wait", { initDataLength: init.length });
+        // #endregion
+        const tw = window.Telegram?.WebApp;
+        tw?.ready();
+        tw?.expand();
         if (!init) {
+          // #region agent log
+          dbg("no-init-abort", {});
+          // #endregion
           setBoot("error");
           return;
         }
         const me = await authTelegram(init);
+        if (cancelled) return;
+        // #region agent log
+        dbg("auth-ok", { userId: me.id });
+        // #endregion
         setUser(me);
         await i18n.changeLanguage(me.locale);
         const [catList, upcomingList, drugsRes] = await Promise.all([
@@ -121,15 +185,29 @@ export default function App() {
           listUpcomingReminders(),
           listDrugs(),
         ]);
+        if (cancelled) return;
         setCats(catList);
         setUpcoming(upcomingList);
         setDrugs(drugsRes.drugs);
         setDrug(drugsRes.drugs[0] || "");
         setBoot("ready");
-      } catch {
+        // #region agent log
+        dbg("boot-ready", { cats: catList.length });
+        // #endregion
+      } catch (e) {
+        if (cancelled) return;
+        // #region agent log
+        dbg("boot-catch", {
+          err: e instanceof Error ? e.message : String(e),
+        });
+        // #endregion
         setBoot("error");
       }
     })();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {
