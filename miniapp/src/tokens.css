@@ -1,0 +1,91 @@
+/**
+ * Catebi design tokens — inferred from https://catebi.ge/
+ * Source: Elementor global kit in wp-content/uploads/elementor/css/post-6.css
+ *   --e-global-color-primary:    #E94E07
+ *   --e-global-color-secondary:  #454647
+ *   --e-global-color-text:       #DCE9F1
+ *   --e-global-color-accent:     #FF5D03
+ *   --e-global-color-a56e45f:    #FFECE6 (cream / soft surface)
+ *   --e-global-color-3558b33:    #FFFFFF
+ *   --e-global-color-b23111e:    #241A5D (deep brand purple)
+ * Typography kit: Inter (primary/text), Sansation (headings on site).
+ * Mini App: Inter + Josefin Sans (also linked on catebi.ge) to avoid loading
+ * custom font files cross-origin from Telegram WebView.
+ *
+ * Telegram: we keep Catebi as the default visual system; optional --tg-* vars
+ * are defined in styles.css when WebApp.themeParams are present (closest match).
+ */
+:root {
+  /* —— Color —— */
+  --catebi-primary: #e94e07;
+  --catebi-primary-pressed: #c94306;
+  --catebi-accent: #ff5d03;
+  --catebi-secondary: #454647;
+  --catebi-text-muted: #5c6366;
+  --catebi-text-on-primary: #ffffff;
+  --catebi-surface-page: #fffbf8;
+  --catebi-surface-card: #ffffff;
+  --catebi-surface-tint: #ffece6;
+  --catebi-border: #dce9f1;
+  --catebi-border-strong: rgba(233, 78, 7, 0.35);
+  --catebi-deep: #241a5d;
+  --catebi-success: #0d8050;
+  --catebi-error: #c53030;
+  --catebi-warning: #b7791f;
+
+  /* Semantic aliases */
+  --color-bg: var(--catebi-surface-page);
+  --color-surface: var(--catebi-surface-card);
+  --color-surface-elevated: var(--catebi-surface-tint);
+  --color-text: var(--catebi-secondary);
+  --color-text-muted: var(--catebi-text-muted);
+  --color-primary: var(--catebi-primary);
+  --color-primary-hover: var(--catebi-accent);
+  --color-accent: var(--catebi-accent);
+  --color-border: var(--catebi-border);
+  --color-heading: var(--catebi-deep);
+  --color-danger: var(--catebi-error);
+  --color-success: var(--catebi-success);
+
+  /* —— Typography —— */
+  --font-display: "Josefin Sans", "Inter", system-ui, sans-serif;
+  --font-body: "Inter", "Noto Sans Georgian", system-ui, sans-serif;
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.375rem;
+  --text-2xl: 1.625rem;
+  --font-normal: 400;
+  --font-medium: 500;
+  --font-semibold: 600;
+  --font-bold: 700;
+  --leading-tight: 1.25;
+  --leading-normal: 1.5;
+
+  /* —— Spacing (4px rhythm, matches ~20px Elementor widget gap) —— */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+
+  /* —— Radius (kit buttons 12px; product cards use larger on site; app uses 12–16) —— */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-full: 9999px;
+
+  /* —— Shadow (from kava-child product cards: 0 3px 6px rgba(0,0,0,.11)) —— */
+  --shadow-card: 0 3px 6px rgba(0, 0, 0, 0.08);
+  --shadow-card-hover: 0 4px 12px rgba(0, 0, 0, 0.1);
+  --shadow-focus: 0 0 0 3px rgba(233, 78, 7, 0.25);
+
+  /* —— Touch —— */
+  --tap-min: 48px;
+  --duration-fast: 120ms;
+  --duration-normal: 200ms;
+  --ease-out: cubic-bezier(0.33, 1, 0.68, 1);
+}

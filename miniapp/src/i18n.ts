@@ -40,6 +40,9 @@ const resources = {
       scenario_sterilization: "Sterilization",
       opTime: "Operation date & time",
       delayDays: "Remind after (days)",
+      footerCredit: "Curator tools brought to you by the Catebi dev team.",
+      footerGithub: "Catebi on GitHub",
+      brandSubtitle: "Curator extension · Catebi",
     },
   },
   ru: {
@@ -80,6 +83,9 @@ const resources = {
       scenario_sterilization: "Стерилизация",
       opTime: "Дата и время операции",
       delayDays: "Напомнить через (дней)",
+      footerCredit: "Инструменты для кураторов от команды разработки Catebi.",
+      footerGithub: "Catebi на GitHub",
+      brandSubtitle: "Расширение для кураторов · Catebi",
     },
   },
   ka: {
@@ -120,6 +126,9 @@ const resources = {
       scenario_sterilization: "სტერილიზაცია",
       opTime: "ოპერაციის თარიღი და დრო",
       delayDays: "შეხსენება (დღეებში)",
+      footerCredit: "კურატორის ინსტრუმენტები — Catebi-ის დეველოპერების გუნდი.",
+      footerGithub: "Catebi GitHub-ზე",
+      brandSubtitle: "კურატორის გაფართოება · Catebi",
     },
   },
 } as const;
