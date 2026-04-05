@@ -2,10 +2,10 @@
 export const CLIENT_UPLOAD_MAX_BYTES = 10_485_760;
 
 /**
- * Many deployments use nginx (or similar) with default client_max_body_size 1m.
- * Multipart has overhead — stay clearly under 1 MiB on the wire to avoid 413.
+ * Reverse proxies often use 1m or even 512k for the *whole* request body.
+ * Multipart adds headers/boundaries — target well under 512 KiB file bytes.
  */
-export const CLIENT_WIRE_MAX_BYTES = 900_000;
+export const CLIENT_WIRE_MAX_BYTES = 480_000;
 
 /** Effective cap for anything we upload (server limit ∩ proxy-safe limit). */
 const EFFECTIVE_MAX_BYTES = Math.min(CLIENT_UPLOAD_MAX_BYTES, CLIENT_WIRE_MAX_BYTES);
@@ -75,11 +75,11 @@ export async function compressImageForUpload(file: File): Promise<File> {
     throw new Error("Could not read this image. Try JPEG or PNG, or a smaller file.");
   }
 
-  const qualities = [0.92, 0.88, 0.82, 0.76, 0.7, 0.64, 0.58, 0.52, 0.46, 0.4];
+  const qualities = [0.88, 0.82, 0.76, 0.7, 0.64, 0.58, 0.52, 0.46, 0.4, 0.34, 0.28];
   let maxEdge = 2048;
 
   try {
-    while (maxEdge >= 480) {
+    while (maxEdge >= 360) {
       const [cw, ch] = scaleDimensions(bitmap.width, bitmap.height, maxEdge);
       const canvas = document.createElement("canvas");
       canvas.width = cw;
