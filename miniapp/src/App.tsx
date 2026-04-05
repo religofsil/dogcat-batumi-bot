@@ -28,13 +28,16 @@ import {
   type User,
 } from "./api";
 import i18n from "./i18n";
+import { safeAlertText, safeCatPhotoUrl } from "./safeAlertText";
 
-const CAT_ORGANIZATIONS: CatOrganization[] = [
-  "catebi",
-  "dogcat_batumi",
-  "dogcat_tbilisi",
-  "none",
-];
+function catOrgI18nKey(
+  org: CatOrganization,
+): "org_catebi" | "org_dogcat_batumi" | "org_dogcat_tbilisi" | "org_none" {
+  if (org === "catebi") return "org_catebi";
+  if (org === "dogcat_batumi") return "org_dogcat_batumi";
+  if (org === "dogcat_tbilisi") return "org_dogcat_tbilisi";
+  return "org_none";
+}
 
 type ScenarioChoice =
   | "new_capture"
@@ -45,6 +48,14 @@ type ScenarioChoice =
 
 export default function App() {
   const { t } = useTranslation();
+  const catOrgSelectOptions = (
+    <>
+      <option value="catebi">{t("org_catebi")}</option>
+      <option value="dogcat_batumi">{t("org_dogcat_batumi")}</option>
+      <option value="dogcat_tbilisi">{t("org_dogcat_tbilisi")}</option>
+      <option value="none">{t("org_none")}</option>
+    </>
+  );
   const [boot, setBoot] = useState<"loading" | "ready" | "error">("loading");
   const [user, setUser] = useState<User | null>(null);
   const [cats, setCats] = useState<Cat[]>([]);
@@ -143,7 +154,7 @@ export default function App() {
       const u = await patchDailyReminderTime(v);
       setUser(u);
     } catch (err) {
-      window.Telegram?.WebApp?.showAlert(err instanceof Error ? err.message : String(err));
+      window.Telegram?.WebApp?.showAlert(safeAlertText(err instanceof Error ? err.message : String(err)));
     }
   }
 
@@ -160,7 +171,7 @@ export default function App() {
         try {
           await uploadCatPhoto(cat.id, newPhotoFile);
         } catch (err) {
-          window.Telegram?.WebApp?.showAlert(err instanceof Error ? err.message : String(err));
+          window.Telegram?.WebApp?.showAlert(safeAlertText(err instanceof Error ? err.message : String(err)));
         }
       }
       setNewName("");
@@ -170,7 +181,7 @@ export default function App() {
       setNewPhotoFile(null);
       await refreshCats();
     } catch (err) {
-      window.Telegram?.WebApp?.showAlert(err instanceof Error ? err.message : String(err));
+      window.Telegram?.WebApp?.showAlert(safeAlertText(err instanceof Error ? err.message : String(err)));
     }
   }
 
@@ -197,7 +208,7 @@ export default function App() {
       await uploadCatPhoto(selected.id, f);
       await refreshCats();
     } catch (err) {
-      window.Telegram?.WebApp?.showAlert(err instanceof Error ? err.message : String(err));
+      window.Telegram?.WebApp?.showAlert(safeAlertText(err instanceof Error ? err.message : String(err)));
     }
   }
 
@@ -207,7 +218,7 @@ export default function App() {
       await deleteCatPhoto(selected.id);
       await refreshCats();
     } catch (err) {
-      window.Telegram?.WebApp?.showAlert(err instanceof Error ? err.message : String(err));
+      window.Telegram?.WebApp?.showAlert(safeAlertText(err instanceof Error ? err.message : String(err)));
     }
   }
 
@@ -278,7 +289,7 @@ export default function App() {
       await navigator.clipboard.writeText(text);
       window.Telegram?.WebApp?.showAlert(t("copied"));
     } catch {
-      window.Telegram?.WebApp?.showAlert(text);
+      window.Telegram?.WebApp?.showAlert(safeAlertText(text));
     }
   }
 
@@ -387,11 +398,7 @@ export default function App() {
                   value={newOrg}
                   onChange={(e) => setNewOrg(e.target.value as CatOrganization)}
                 >
-                  {CAT_ORGANIZATIONS.map((o) => (
-                    <option key={o} value={o}>
-                      {t(`org_${o}` as never)}
-                    </option>
-                  ))}
+                  {catOrgSelectOptions}
                 </select>
               </div>
               <div>
@@ -417,34 +424,37 @@ export default function App() {
                 {t("addCat")}
               </button>
               <div className="stack stack--sm" style={{ marginTop: "var(--space-2)" }}>
-                {cats.map((c) => (
-                  <div key={c.id} className="cat-row">
-                    <button
-                      type="button"
-                      className="btn btn--ghost cat-row__main"
-                      onClick={() => setSelectedId(c.id)}
-                    >
-                      {c.photo_url ? (
-                        <img className="cat-row__thumb" src={c.photo_url} alt="" />
-                      ) : (
-                        <div className="cat-row__thumb cat-row__thumb--empty" aria-hidden />
-                      )}
-                      <span className="cat-row__text">
-                        <span className="cat-row__name">{c.name}</span>
-                        <span className="cat-row__org text-small text-muted">
-                          {t(`org_${c.organization}` as never)}
+                {cats.map((c) => {
+                  const thumbSrc = safeCatPhotoUrl(c.photo_url);
+                  return (
+                    <div key={c.id} className="cat-row">
+                      <button
+                        type="button"
+                        className="btn btn--ghost cat-row__main"
+                        onClick={() => setSelectedId(c.id)}
+                      >
+                        {thumbSrc ? (
+                          <img className="cat-row__thumb" src={thumbSrc} alt="" />
+                        ) : (
+                          <div className="cat-row__thumb cat-row__thumb--empty" aria-hidden />
+                        )}
+                        <span className="cat-row__text">
+                          <span className="cat-row__name">{c.name}</span>
+                          <span className="cat-row__org text-small text-muted">
+                            {t(catOrgI18nKey(c.organization))}
+                          </span>
                         </span>
-                      </span>
-                    </button>
-                    <button
-                      type="button"
-                      className="btn btn--danger"
-                      onClick={() => void onDeleteCat(c.id)}
-                    >
-                      {t("delete")}
-                    </button>
-                  </div>
-                ))}
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn--danger"
+                        onClick={() => void onDeleteCat(c.id)}
+                      >
+                        {t("delete")}
+                      </button>
+                    </div>
+                  );
+                })}
               </div>
             </section>
 
@@ -452,11 +462,14 @@ export default function App() {
               <section className="card stack">
                 <span className="card__title">{selected.name}</span>
                 <div className="cat-detail-photo">
-                  {selected.photo_url ? (
-                    <img className="cat-photo-preview" src={selected.photo_url} alt="" />
-                  ) : (
-                    <div className="cat-photo-placeholder text-muted text-small">{t("photo")}</div>
-                  )}
+                  {(() => {
+                    const detailSrc = safeCatPhotoUrl(selected.photo_url);
+                    return detailSrc ? (
+                      <img className="cat-photo-preview" src={detailSrc} alt="" />
+                    ) : (
+                      <div className="cat-photo-placeholder text-muted text-small">{t("photo")}</div>
+                    );
+                  })()}
                   <div className="row row--photo-actions">
                     <label className="btn btn--secondary btn--block">
                       {t("choosePhoto")}
@@ -489,11 +502,7 @@ export default function App() {
                     value={selected.organization}
                     onChange={(e) => void onOrgChange(selected.id, e.target.value as CatOrganization)}
                   >
-                    {CAT_ORGANIZATIONS.map((o) => (
-                      <option key={o} value={o}>
-                        {t(`org_${o}` as never)}
-                      </option>
-                    ))}
+                    {catOrgSelectOptions}
                   </select>
                 </div>
                 <div>
