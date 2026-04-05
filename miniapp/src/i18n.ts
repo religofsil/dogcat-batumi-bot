@@ -55,7 +55,8 @@ const resources = {
       photo: "Photo",
       choosePhoto: "Choose photo",
       removePhoto: "Remove photo",
-      photoHint: "Camera or gallery · JPEG, PNG or WebP · max 5 MB",
+      photoHint:
+        "Camera or gallery · JPEG, PNG or WebP · large photos are resized automatically (up to about 10 MB)",
     },
   },
   ru: {
@@ -111,7 +112,8 @@ const resources = {
       photo: "Фото",
       choosePhoto: "Выбрать фото",
       removePhoto: "Удалить фото",
-      photoHint: "Камера или галерея · JPEG, PNG или WebP · до 5 МБ",
+      photoHint:
+        "Камера или галерея · JPEG, PNG или WebP · большие фото уменьшаются автоматически (до ~10 МБ)",
     },
   },
   ka: {
@@ -167,7 +169,8 @@ const resources = {
       photo: "ფოტო",
       choosePhoto: "ფოტოს არჩევა",
       removePhoto: "ფოტოს წაშლა",
-      photoHint: "კამერა ან გალერეა · JPEG, PNG ან WebP · max 5 მბ",
+      photoHint:
+        "კამერა ან გალერეა · JPEG, PNG ან WebP · დიდი ფოტოები ავტომატურად მცირდება (დაახლოებით 10 მბ-მდე)",
     },
   },
 } as const;

@@ -1,3 +1,5 @@
+import { compressImageForUpload } from "./compressImageForUpload";
+
 const apiBase = "";
 
 async function parseJson<T>(res: Response): Promise<T> {
@@ -126,8 +128,9 @@ export async function updateCat(
 }
 
 export async function uploadCatPhoto(catId: number, file: File): Promise<Cat> {
+  const prepared = await compressImageForUpload(file);
   const fd = new FormData();
-  fd.append("file", file);
+  fd.append("file", prepared);
   const res = await fetch(`${apiBase}/api/cats/${catId}/photo`, {
     method: "POST",
     credentials: "include",
