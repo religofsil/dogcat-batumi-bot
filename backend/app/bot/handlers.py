@@ -1,7 +1,14 @@
 from aiogram import F, Router
 from aiogram.enums import ChatType
 from aiogram.filters import Command, CommandStart
-from aiogram.types import BotCommand, MenuButtonWebApp, Message, WebAppInfo
+from aiogram.types import (
+    BotCommand,
+    KeyboardButton,
+    MenuButtonWebApp,
+    Message,
+    ReplyKeyboardMarkup,
+    WebAppInfo,
+)
 from sqlalchemy import select
 
 from app.config import get_settings
@@ -13,18 +20,26 @@ from app.services.scenarios import get_or_create_user
 router = Router(name="main")
 
 
-async def ensure_menu_button(bot) -> None:
+def _miniapp_url() -> str:
+    """Telegram Web Apps work best with a trailing slash on the app root."""
     settings = get_settings()
-    await bot.set_chat_menu_button(
-        menu_button=MenuButtonWebApp(text="Open app", web_app=WebAppInfo(url=settings.miniapp_url))
-    )
+    base = settings.miniapp_url.rstrip("/")
+    return f"{base}/"
+
+
+async def ensure_menu_button(bot, *, chat_id: int | None = None) -> None:
+    url = _miniapp_url()
+    menu = MenuButtonWebApp(text="Open app", web_app=WebAppInfo(url=url))
+    if chat_id is not None:
+        await bot.set_chat_menu_button(chat_id=chat_id, menu_button=menu)
+    else:
+        await bot.set_chat_menu_button(menu_button=menu)
 
 
 @router.message(CommandStart(), F.chat.type == ChatType.PRIVATE)
 async def cmd_start(message: Message) -> None:
     if not message.from_user:
         return
-    settings = get_settings()
     async with SessionLocal() as session:
         async with session.begin():
             user = await get_or_create_user(
@@ -33,9 +48,15 @@ async def cmd_start(message: Message) -> None:
                 message.from_user.language_code,
             )
             loc = user.locale
-        text = bot_message(loc, "start", miniapp_url=settings.miniapp_url)
-    await message.answer(text)
-    await ensure_menu_button(message.bot)
+        text = bot_message(loc, "start", miniapp_url=_miniapp_url())
+    url = _miniapp_url()
+    # Visible Web App button (works even if the ⋮ menu button is easy to miss).
+    kb = ReplyKeyboardMarkup(
+        keyboard=[[KeyboardButton(text="Open app", web_app=WebAppInfo(url=url))]],
+        resize_keyboard=True,
+    )
+    await message.answer(text, reply_markup=kb)
+    await ensure_menu_button(message.bot, chat_id=message.chat.id)
 
 
 @router.message(Command("help"), F.chat.type == ChatType.PRIVATE)
