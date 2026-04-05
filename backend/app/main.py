@@ -8,9 +8,9 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from app.api.routes_debug import router as debug_router
 from app.api.routes_auth import router as auth_router
 from app.api.routes_cats import router as cats_router
+from app.api.routes_debug import router as debug_router
 from app.api.routes_dosage import router as dosage_router
 from app.api.routes_reminders import router as reminders_router
 from app.api.routes_reminders import upcoming_router as reminders_upcoming_router
