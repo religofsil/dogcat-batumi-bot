@@ -1,8 +1,14 @@
-/** Match server default `max_upload_bytes` (10 MiB) for fallback checks. */
+/** Match server default `max_upload_bytes` (10 MiB). */
 export const CLIENT_UPLOAD_MAX_BYTES = 10_485_760;
 
-/** Skip re-encoding when already small enough (saves CPU, avoids quality loss). */
-const PASS_THROUGH_MAX_BYTES = 4_500_000;
+/**
+ * Many deployments use nginx (or similar) with default client_max_body_size 1m.
+ * Multipart has overhead — stay clearly under 1 MiB on the wire to avoid 413.
+ */
+export const CLIENT_WIRE_MAX_BYTES = 900_000;
+
+/** Effective cap for anything we upload (server limit ∩ proxy-safe limit). */
+const EFFECTIVE_MAX_BYTES = Math.min(CLIENT_UPLOAD_MAX_BYTES, CLIENT_WIRE_MAX_BYTES);
 
 const ALLOWED_RAW = new Set(["image/jpeg", "image/jpg", "image/png", "image/webp"]);
 
@@ -14,7 +20,7 @@ function shouldPassThroughUnchanged(file: File): boolean {
   const ct = normalizedType(file);
   if (!ct) return false;
   if (!ALLOWED_RAW.has(ct)) return false;
-  return file.size <= PASS_THROUGH_MAX_BYTES;
+  return file.size <= EFFECTIVE_MAX_BYTES;
 }
 
 async function loadBitmap(file: File): Promise<ImageBitmap> {
@@ -63,7 +69,7 @@ export async function compressImageForUpload(file: File): Promise<File> {
   try {
     bitmap = await loadBitmap(file);
   } catch {
-    if (file.size <= CLIENT_UPLOAD_MAX_BYTES) {
+    if (file.size <= EFFECTIVE_MAX_BYTES) {
       return file;
     }
     throw new Error("Could not read this image. Try JPEG or PNG, or a smaller file.");
@@ -73,7 +79,7 @@ export async function compressImageForUpload(file: File): Promise<File> {
   let maxEdge = 2048;
 
   try {
-    while (maxEdge >= 640) {
+    while (maxEdge >= 480) {
       const [cw, ch] = scaleDimensions(bitmap.width, bitmap.height, maxEdge);
       const canvas = document.createElement("canvas");
       canvas.width = cw;
@@ -86,7 +92,7 @@ export async function compressImageForUpload(file: File): Promise<File> {
 
       for (const q of qualities) {
         const blob = await canvasToJpegBlob(canvas, q);
-        if (blob && blob.size <= CLIENT_UPLOAD_MAX_BYTES) {
+        if (blob && blob.size <= EFFECTIVE_MAX_BYTES) {
           return new File([blob], "photo.jpg", {
             type: "image/jpeg",
             lastModified: Date.now(),
@@ -99,7 +105,7 @@ export async function compressImageForUpload(file: File): Promise<File> {
     bitmap.close();
   }
 
-  if (file.size <= CLIENT_UPLOAD_MAX_BYTES) {
+  if (file.size <= EFFECTIVE_MAX_BYTES) {
     return file;
   }
   throw new Error("Image is too large even after compressing. Try a different photo.");

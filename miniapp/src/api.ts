@@ -1,3 +1,4 @@
+import { agentDebugLog } from "./agentDebugLog";
 import { compressImageForUpload } from "./compressImageForUpload";
 
 const apiBase = "";
@@ -129,6 +130,19 @@ export async function updateCat(
 
 export async function uploadCatPhoto(catId: number, file: File): Promise<Cat> {
   const prepared = await compressImageForUpload(file);
+  // #region agent log
+  agentDebugLog({
+    location: "api.ts:uploadCatPhoto",
+    message: "after compress, before fetch",
+    data: {
+      catId,
+      originalSize: file.size,
+      preparedSize: prepared.size,
+      preparedType: prepared.type,
+    },
+    hypothesisId: "H1-H2",
+  });
+  // #endregion
   const fd = new FormData();
   fd.append("file", prepared);
   const res = await fetch(`${apiBase}/api/cats/${catId}/photo`, {
@@ -136,6 +150,14 @@ export async function uploadCatPhoto(catId: number, file: File): Promise<Cat> {
     credentials: "include",
     body: fd,
   });
+  // #region agent log
+  agentDebugLog({
+    location: "api.ts:uploadCatPhoto",
+    message: "fetch response",
+    data: { catId, status: res.status, ok: res.ok },
+    hypothesisId: "H1-H3",
+  });
+  // #endregion
   if (!res.ok) {
     throw new Error(await res.text());
   }

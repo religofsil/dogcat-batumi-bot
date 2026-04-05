@@ -56,7 +56,7 @@ const resources = {
       choosePhoto: "Choose photo",
       removePhoto: "Remove photo",
       photoHint:
-        "Camera or gallery · JPEG, PNG or WebP · large photos are resized automatically (up to about 10 MB)",
+        "Camera or gallery · JPEG, PNG or WebP · photos are compressed for upload (~900 KB over the network; avoids 413 errors behind typical reverse proxies)",
     },
   },
   ru: {
@@ -113,7 +113,7 @@ const resources = {
       choosePhoto: "Выбрать фото",
       removePhoto: "Удалить фото",
       photoHint:
-        "Камера или галерея · JPEG, PNG или WebP · большие фото уменьшаются автоматически (до ~10 МБ)",
+        "Камера или галерея · JPEG, PNG или WebP · фото сжимаются для отправки (~900 КБ по сети; меньше ошибок 413 за прокси)",
     },
   },
   ka: {
@@ -170,7 +170,7 @@ const resources = {
       choosePhoto: "ფოტოს არჩევა",
       removePhoto: "ფოტოს წაშლა",
       photoHint:
-        "კამერა ან გალერეა · JPEG, PNG ან WebP · დიდი ფოტოები ავტომატურად მცირდება (დაახლოებით 10 მბ-მდე)",
+        "კამერა ან გალერეა · JPEG, PNG ან WebP · ფოტო იკუმშება ატვირთვისთვის (~900 კბ ქსელში; ნაკლები 413 პროქსის გასწვრივ)",
     },
   },
 } as const;
