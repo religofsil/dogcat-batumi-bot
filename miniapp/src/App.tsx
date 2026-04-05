@@ -12,7 +12,6 @@ import {
   listReminders,
   listScenarios,
   listUpcomingReminders,
-  loadMe,
   patchDailyReminderTime,
   patchLocale,
   startScenario,
@@ -114,15 +113,18 @@ export default function App() {
           setBoot("error");
           return;
         }
-        await authTelegram(init);
-        const me = await loadMe();
+        const me = await authTelegram(init);
         setUser(me);
         await i18n.changeLanguage(me.locale);
-        await refreshCats();
-        setUpcoming(await listUpcomingReminders());
-        const d = await listDrugs();
-        setDrugs(d.drugs);
-        setDrug(d.drugs[0] || "");
+        const [catList, upcomingList, drugsRes] = await Promise.all([
+          listCats(),
+          listUpcomingReminders(),
+          listDrugs(),
+        ]);
+        setCats(catList);
+        setUpcoming(upcomingList);
+        setDrugs(drugsRes.drugs);
+        setDrug(drugsRes.drugs[0] || "");
         setBoot("ready");
       } catch {
         setBoot("error");

@@ -9,8 +9,8 @@
  *   --e-global-color-3558b33:    #FFFFFF
  *   --e-global-color-b23111e:    #241A5D (deep brand purple)
  * Typography kit: Inter (primary/text), Sansation (headings on site).
- * Mini App: Inter + Josefin Sans (also linked on catebi.ge) to avoid loading
- * custom font files cross-origin from Telegram WebView.
+ * Mini App: system font stack only (no remote webfonts) for fast first paint
+ * in Telegram Desktop WebView and mobile.
  *
  * Telegram: we keep Catebi as the default visual system; optional --tg-* vars
  * are defined in styles.css when WebApp.themeParams are present (closest match).
@@ -48,8 +48,9 @@
   --color-success: var(--catebi-success);
 
   /* —— Typography —— */
-  --font-display: "Josefin Sans", "Inter", system-ui, sans-serif;
-  --font-body: "Inter", "Noto Sans Georgian", system-ui, sans-serif;
+  --font-display: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", sans-serif;
+  --font-body: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", "Noto Sans Georgian",
+    sans-serif;
   --text-xs: 0.75rem;
   --text-sm: 0.875rem;
   --text-base: 1rem;
