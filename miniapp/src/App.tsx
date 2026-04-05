@@ -372,7 +372,6 @@ export default function App() {
                   className="input"
                   type="file"
                   accept="image/jpeg,image/jpg,image/png,image/webp"
-                  capture="environment"
                   onChange={(e) => {
                     const f = e.target.files?.[0] ?? null;
                     setNewPhotoFile(f);
@@ -434,7 +433,6 @@ export default function App() {
                         type="file"
                         className="visually-hidden"
                         accept="image/jpeg,image/jpg,image/png,image/webp"
-                        capture="environment"
                         onChange={(e) => void onSelectedPhotoChange(e)}
                       />
                     </label>
