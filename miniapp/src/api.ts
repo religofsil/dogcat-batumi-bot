@@ -1,4 +1,4 @@
-import { clientLog } from "./clientLogger";
+import { bootstrapLog, clientLog } from "./clientLogger";
 import { compressImageForUpload } from "./compressImageForUpload";
 
 const apiBase = "";
@@ -75,10 +75,20 @@ export type Reminder = {
 };
 
 export async function authTelegram(initData: string): Promise<User> {
-  return apiFetch<User>("/api/auth/telegram", {
+  const res = await fetch(`${apiBase}/api/auth/telegram`, {
     method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ init_data: initData }),
   });
+  if (!res.ok) {
+    if (res.status === 401) {
+      bootstrapLog("auth_failed", { status: 401 });
+    }
+    const body = await res.text();
+    throw new Error(body || res.statusText);
+  }
+  return parseJson<User>(res);
 }
 
 export async function loadMe(): Promise<User> {
