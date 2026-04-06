@@ -7,7 +7,7 @@ from aiogram.types import Update
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.exception_handlers import http_exception_handler
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from app.api.routes_auth import router as auth_router
@@ -140,8 +140,16 @@ def create_app() -> FastAPI:
 
     static_dir = Path(__file__).resolve().parent / "static" / "miniapp"
     if static_dir.is_dir():
+        mini_root = settings.miniapp_path.rstrip("/") or "/miniapp"
+        index_html = static_dir / "index.html"
+        # StaticFiles mounted at /miniapp issues 307 /miniapp -> /miniapp/. Telegram Desktop's
+        # WebView often does not follow that redirect, so the bundle never runs (no /api/*).
+        @app.get(mini_root, include_in_schema=False)
+        async def miniapp_entry_no_trailing_slash() -> FileResponse:
+            return FileResponse(index_html)
+
         app.mount(
-            settings.miniapp_path,
+            f"{mini_root}/",
             StaticFiles(directory=static_dir, html=True),
             name="miniapp",
         )
