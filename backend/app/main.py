@@ -12,6 +12,7 @@ from fastapi.staticfiles import StaticFiles
 
 from app.api.routes_auth import router as auth_router
 from app.api.routes_cats import router as cats_router
+from app.api.routes_client_bootstrap_log import router as client_bootstrap_log_router
 from app.api.routes_client_log import router as client_log_router
 from app.api.routes_debug import router as debug_router
 from app.api.routes_dosage import router as dosage_router
@@ -121,6 +122,7 @@ def create_app() -> FastAPI:
 
     app.include_router(auth_router)
     app.include_router(cats_router)
+    app.include_router(client_bootstrap_log_router)
     app.include_router(client_log_router)
     app.include_router(debug_router)
     app.include_router(dosage_router)

@@ -26,7 +26,7 @@ import {
   type ScenarioRun,
   type User,
 } from "./api";
-import { clientLog } from "./clientLogger";
+import { bootstrapLog, clientLog, truncateForLog } from "./clientLogger";
 import i18n from "./i18n";
 import { safeAlertText, safeCatPhotoUrl } from "./safeAlertText";
 
@@ -130,6 +130,7 @@ export default function App() {
     }
 
     (async () => {
+      let authSucceeded = false;
       try {
         const init = await waitForTelegramInitData(4000);
         if (cancelled) return;
@@ -137,10 +138,17 @@ export default function App() {
         tw?.ready();
         tw?.expand();
         if (!init) {
+          bootstrapLog("no_init_data", {
+            platform: tw?.platform ?? null,
+            version: tw?.version ?? null,
+            colorScheme: tw?.colorScheme ?? null,
+            initDataLen: 0,
+          });
           setBoot("error");
           return;
         }
         const me = await authTelegram(init);
+        authSucceeded = true;
         if (cancelled) return;
         setUser(me);
         await i18n.changeLanguage(me.locale);
@@ -158,9 +166,12 @@ export default function App() {
         clientLog("info", "boot_ready", { cats: catList.length });
       } catch (e) {
         if (cancelled) return;
-        clientLog("error", "boot_failed", {
-          reason: e instanceof Error ? e.message : String(e),
-        });
+        const reason = truncateForLog(e instanceof Error ? e.message : String(e));
+        if (authSucceeded) {
+          clientLog("error", "boot_failed", { reason });
+        } else {
+          bootstrapLog("boot_failed", { reason });
+        }
         setBoot("error");
       }
     })();
