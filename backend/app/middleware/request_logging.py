@@ -14,7 +14,11 @@ REQUEST_ID_HEADER = "X-Request-ID"
 
 
 class RequestLoggingMiddleware(BaseHTTPMiddleware):
-    async def dispatch(self, request: Request, call_next: Callable[[Request], Response]) -> Response:
+    async def dispatch(
+        self,
+        request: Request,
+        call_next: Callable[[Request], Response],
+    ) -> Response:
         rid = request.headers.get(REQUEST_ID_HEADER) or str(uuid.uuid4())
         request.state.request_id = rid
 
