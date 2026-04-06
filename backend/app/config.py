@@ -1,6 +1,8 @@
+import logging
 from functools import lru_cache
 from pathlib import Path
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -27,11 +29,22 @@ class Settings(BaseSettings):
     set_webhook_on_startup: bool = False
     secure_cookies: bool = True
 
+    log_level: str = "INFO"
+
+
     upload_root: Path = Path("/app/data/uploads")
     max_upload_bytes: int = 10_485_760  # 10 MiB
 
     # Optional: absolute path on the API host for miniapp NDJSON debug logs (Cursor debug sessions).
     client_debug_log_path: str | None = None
+
+    @field_validator("log_level")
+    @classmethod
+    def normalize_log_level(cls, v: str) -> str:
+        name = (v or "INFO").upper()
+        if name not in logging.getLevelNamesMapping():
+            return "INFO"
+        return name
 
     @property
     def miniapp_url(self) -> str:
