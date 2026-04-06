@@ -26,7 +26,7 @@ import {
   type ScenarioRun,
   type User,
 } from "./api";
-import { agentDebugLog } from "./agentDebugLog";
+import { clientLog } from "./clientLogger";
 import i18n from "./i18n";
 import { safeAlertText, safeCatPhotoUrl } from "./safeAlertText";
 
@@ -105,24 +105,6 @@ export default function App() {
 
   useEffect(() => {
     let cancelled = false;
-    // #region agent log
-    const dbg = (phase: string, extra: Record<string, unknown>) => {
-      const w = window.Telegram?.WebApp;
-      agentDebugLog({
-        location: "App.tsx:boot",
-        message: `boot ${phase}`,
-        data: {
-          phase,
-          hasWebApp: !!w,
-          initDataLength: (w?.initData || "").length,
-          platform: w?.platform ?? null,
-          version: w?.version ?? null,
-          ...extra,
-        },
-        hypothesisId: "H1-H2-H5",
-      });
-    };
-    // #endregion
 
     function waitForTelegramInitData(maxMs: number): Promise<string> {
       const t0 = performance.now();
@@ -148,36 +130,18 @@ export default function App() {
     }
 
     (async () => {
-      // #region agent log
-      dbg("sync", {});
-      queueMicrotask(() => {
-        if (!cancelled) dbg("microtask", {});
-      });
-      requestAnimationFrame(() => {
-        if (!cancelled) dbg("rAF", {});
-      });
-      // #endregion
       try {
         const init = await waitForTelegramInitData(4000);
         if (cancelled) return;
-        // #region agent log
-        dbg("after-wait", { initDataLength: init.length });
-        // #endregion
         const tw = window.Telegram?.WebApp;
         tw?.ready();
         tw?.expand();
         if (!init) {
-          // #region agent log
-          dbg("no-init-abort", {});
-          // #endregion
           setBoot("error");
           return;
         }
         const me = await authTelegram(init);
         if (cancelled) return;
-        // #region agent log
-        dbg("auth-ok", { userId: me.id });
-        // #endregion
         setUser(me);
         await i18n.changeLanguage(me.locale);
         const [catList, upcomingList, drugsRes] = await Promise.all([
@@ -191,16 +155,12 @@ export default function App() {
         setDrugs(drugsRes.drugs);
         setDrug(drugsRes.drugs[0] || "");
         setBoot("ready");
-        // #region agent log
-        dbg("boot-ready", { cats: catList.length });
-        // #endregion
+        clientLog("info", "boot_ready", { cats: catList.length });
       } catch (e) {
         if (cancelled) return;
-        // #region agent log
-        dbg("boot-catch", {
-          err: e instanceof Error ? e.message : String(e),
+        clientLog("error", "boot_failed", {
+          reason: e instanceof Error ? e.message : String(e),
         });
-        // #endregion
         setBoot("error");
       }
     })();

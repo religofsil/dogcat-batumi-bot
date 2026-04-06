@@ -5,11 +5,14 @@ from pathlib import Path
 
 from aiogram.types import Update
 from fastapi import FastAPI, HTTPException, Request
+from fastapi.exception_handlers import http_exception_handler
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from app.api.routes_auth import router as auth_router
 from app.api.routes_cats import router as cats_router
+from app.api.routes_client_log import router as client_log_router
 from app.api.routes_debug import router as debug_router
 from app.api.routes_dosage import router as dosage_router
 from app.api.routes_reminders import router as reminders_router
@@ -20,9 +23,41 @@ from app.api.routes_user import router as user_router
 from app.bot.handlers import register_bot_commands
 from app.bot.setup import build_bot, build_dispatcher
 from app.config import get_settings
+from app.logging_setup import configure_logging
+from app.middleware.request_logging import RequestLoggingMiddleware
 from app.services.reminder_dispatcher import reminder_loop
 
 log = logging.getLogger(__name__)
+
+
+def _telegram_update_event_type(update: Update) -> str:
+    for name in (
+        "message",
+        "edited_message",
+        "channel_post",
+        "edited_channel_post",
+        "inline_query",
+        "chosen_inline_result",
+        "callback_query",
+        "shipping_query",
+        "pre_checkout_query",
+        "poll",
+        "poll_answer",
+        "my_chat_member",
+        "chat_member",
+        "chat_join_request",
+        "message_reaction",
+        "message_reaction_count",
+        "chat_boost",
+        "removed_chat_boost",
+        "business_connection",
+        "business_message",
+        "edited_business_message",
+        "deleted_business_messages",
+    ):
+        if getattr(update, name, None) is not None:
+            return name
+    return "unknown"
 
 
 @asynccontextmanager
@@ -42,7 +77,7 @@ async def lifespan(app: FastAPI):
             url=settings.webhook_url,
             secret_token=settings.telegram_webhook_secret or None,
         )
-        log.info("webhook_set", extra={"url": settings.webhook_url})
+        log.info("webhook_set url=%s", settings.webhook_url)
 
     try:
         yield
@@ -58,6 +93,7 @@ async def lifespan(app: FastAPI):
 
 def create_app() -> FastAPI:
     settings = get_settings()
+    configure_logging(settings.log_level)
     settings.upload_root.mkdir(parents=True, exist_ok=True)
     app = FastAPI(title="Batumi curator bot", lifespan=lifespan)
 
@@ -69,16 +105,30 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+    # Outermost: runs first on request — logs final status and sets X-Request-ID.
+    app.add_middleware(RequestLoggingMiddleware)
 
-    app.include_router(debug_router)
+    @app.exception_handler(Exception)
+    async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+        if isinstance(exc, HTTPException):
+            return await http_exception_handler(request, exc)
+        rid = getattr(request.state, "request_id", None)
+        log.exception("unhandled request_id=%s path=%s", rid, request.url.path)
+        return JSONResponse(
+            status_code=500,
+            content={"detail": "internal_server_error"},
+        )
+
     app.include_router(auth_router)
-    app.include_router(user_router)
     app.include_router(cats_router)
-    app.include_router(scenarios_router)
+    app.include_router(client_log_router)
+    app.include_router(debug_router)
+    app.include_router(dosage_router)
     app.include_router(reminders_router)
     app.include_router(reminders_upcoming_router)
-    app.include_router(dosage_router)
+    app.include_router(scenarios_router)
     app.include_router(templates_router)
+    app.include_router(user_router)
 
     app.mount(
         "/uploads",
@@ -114,6 +164,11 @@ def create_app() -> FastAPI:
         dp = request.app.state.dp
         data = await request.json()
         update = Update.model_validate(data)
+        log.info(
+            "telegram_webhook update_id=%s event_type=%s",
+            update.update_id,
+            _telegram_update_event_type(update),
+        )
         await dp.feed_update(bot, update)
         return {"ok": True}
 

@@ -1,4 +1,4 @@
-import { agentDebugLog } from "./agentDebugLog";
+import { clientLog } from "./clientLogger";
 import { compressImageForUpload } from "./compressImageForUpload";
 
 const apiBase = "";
@@ -24,6 +24,7 @@ export async function apiFetch<T>(
     },
   });
   if (!res.ok) {
+    clientLog("warning", "api_error", { path, status: res.status });
     const body = await res.text();
     throw new Error(body || res.statusText);
   }
@@ -130,19 +131,6 @@ export async function updateCat(
 
 export async function uploadCatPhoto(catId: number, file: File): Promise<Cat> {
   const prepared = await compressImageForUpload(file);
-  // #region agent log
-  agentDebugLog({
-    location: "api.ts:uploadCatPhoto",
-    message: "after compress, before fetch",
-    data: {
-      catId,
-      originalSize: file.size,
-      preparedSize: prepared.size,
-      preparedType: prepared.type,
-    },
-    hypothesisId: "H1-H2",
-  });
-  // #endregion
   const fd = new FormData();
   fd.append("file", prepared);
   const res = await fetch(`${apiBase}/api/cats/${catId}/photo`, {
@@ -150,15 +138,11 @@ export async function uploadCatPhoto(catId: number, file: File): Promise<Cat> {
     credentials: "include",
     body: fd,
   });
-  // #region agent log
-  agentDebugLog({
-    location: "api.ts:uploadCatPhoto",
-    message: "fetch response",
-    data: { catId, status: res.status, ok: res.ok },
-    hypothesisId: "H1-H3",
-  });
-  // #endregion
   if (!res.ok) {
+    clientLog("warning", "api_error", {
+      path: `/api/cats/${catId}/photo`,
+      status: res.status,
+    });
     throw new Error(await res.text());
   }
   return parseJson<Cat>(res);
@@ -174,6 +158,7 @@ export async function deleteCat(id: number): Promise<void> {
     credentials: "include",
   });
   if (!res.ok) {
+    clientLog("warning", "api_error", { path: `/api/cats/${id}`, status: res.status });
     throw new Error(await res.text());
   }
 }
